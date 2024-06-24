@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    command: bash -c "alembic upgrade head && uvicorn main:app --host 0.0.0.0 --port 8000"
+    restart: always
+    ports:
+      - 8000:8000
+    volumes:
+      - images_data:/images
+    environment:
+      - POSTGRES_URL_DOCKER=postgresql://admin:password@db:5432/guidebook
+    depends_on:
+      - db
+  bot:
+    build: .
+    command: "python bot.py"
+    restart: always
+    environment:
+      - POSTGRES_URL_DOCKER=postgresql://admin:password@db:5432/guidebook
+      - GROUP_TOKEN=TOKEN
+    depends_on:
+      - db
+  db:
+    image: postgres:13-alpine
+    restart: always
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    expose:
+      - 5432
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=guidebook
+
+volumes:
+  postgres_data:
+  images_data:
+  traefik-public-certificates:
